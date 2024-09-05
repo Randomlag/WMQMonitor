@@ -1,0 +1,182 @@
+### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+# Each queueManager requires 9 threads to fetch its metrics concurrently and 1 main thread to run the extension.
+# So for ex, if there are 2 queueManagers configured, please set the numberOfThreads to be 19 (2*9+1)
+numberOfThreads: 20
+
+# This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
+# To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
+#metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
+# For SIM
+ metricPrefix: "Custom Metrics|WebsphereMQ|"
+
+# This is the timeout on queue metrics and channel metrics threads. Default value is 20 seconds.
+# No need to change the default unless you know what you are doing.
+# queueMetricsCollectionTimeoutInSeconds: 40
+# channelMetricsCollectionTimeoutInSeconds: 40
+# topicMetricsCollectionTimeoutInSeconds: 40
+
+# Uncomment only if encryption of passwords is wanted.
+# encryptionKey: ""
+
+queueManagers:
+  - displayName: ""
+    host: "localhost"
+    port: 7747
+
+    # Actual name of the queue manager
+    name: "QM1"
+
+    transportType: "Bindings"
+
+    queueFilters:
+        include: 
+          - "*"
+          - "TEBT_CMSPolicy.ZPE_MQImport_MQ_CALLBACK_D@MECluster.000-BPM.SOAPCSPSPRDDE.Bus"
+          - "TEBT_LA_Enquiry_ESB_Module.ZRQ_GetRevivalLifeQuote_MQ_Import_MQ_CALLBACK_D@MECluster.000-BPM.SOAPCSPSPRDDE.Bus"
+          - "sca/TEBT_UpdateReceiptNo_LA@MECluster.000-BPM.SOAPCSPSPRDDE.Bus"
+          - "sca/TEBT_CMSPolicy@MECluster.000-BPM.SOAPCSPSPRDDE.Bus"
+          - "_SYSTEM.Exception.Destination.MECluster.000-BPM.SOAPCSPSPRDDE.Bus@MECluster.000-BPM.SOAPCSPSPRDDE.Bus"
+          - "sca/TEBT_LA_Enquiry_ESB_Module@MECluster.000-BPM.SOAPCSPSPRDDE.Bus"
+        exclude:
+           - type: "STARTSWITH"
+             values: ["SYSTEM","AMQ"]
+
+    channelFilters:
+        include: ["*"]
+        exclude:
+           - type: "STARTSWITH"
+             values: ["SYSTEM"]
+
+    listenerFilters:
+        include: ["*"]
+        exclude:
+           - type: "STARTSWITH"
+             values: ["SYSTEM"]
+
+    topicFilters:
+        include: ["#"]
+        exclude:
+           - type: "STARTSWITH"
+             values: ["SYSTEM","$SYS"]
+
+mqMetrics:
+  - metricsType: "queueMgrMetrics"
+    metrics:
+      include:
+        - Status:
+            alias: "Status"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
+        - ConnectionCount:
+            alias: "ConnectionCount"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_CONNECTION_COUNT"
+      
+  - metricsType: "queueMetrics"
+    metrics:
+      include:
+        - MaxQueueDepth:
+            alias: "Max Queue Depth"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - CurrentQueueDepth:
+            alias: "Current Queue Depth"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - OpenInputCount:
+            alias: "Open Input Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - OpenOutputCount:
+            alias: "Open Output Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+
+        - UncommittedMsgs:
+            alias: "UncommittedMsgs"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+      
+  - metricsType: "channelMetrics"
+    metrics:
+      include:
+        - Messages:
+            alias: "Messages"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+          
+        - Status:
+            alias: "Status"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
+          
+        - ByteSent:
+            alias: "Byte Sent"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+          
+        - ByteReceived:
+            alias: "Byte Received"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+          
+        - BuffersSent:
+            alias: "Buffers Sent"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+          
+        - BuffersReceived:
+            alias: "Buffers Received"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+
+  - metricsType: "listenerMetrics"
+    metrics:
+      include:
+        - Status:
+            alias: "Status"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
+
+  - metricsType: "topicMetrics"
+    metrics:
+      include:
+        - PublishCount:
+            alias: "Publish Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_PUB_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+        - SubscriptionCount:
+            alias: "Subscription Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_SUB_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+
+sslConnection:
+  trustStorePath: ""
+  trustStorePassword: ""
+  trustStoreEncryptedPassword: ""
+
+  keyStorePath: ""
+  keyStorePassword: ""
+  keyStoreEncryptedPassword: ""
+
+controllerInfo:
+  controllerHost: "airindiatalaceprivatelimited-prod.saas.appdynamics.com"
+  controllerPort: 443
+  account: "airindiatalaceprivatelimited-prod"
+  username: "user"
+  password: "welcome"
+  encryptedPassword: ""
+  encryptionKey: ""
+  controllerSslEnabled: true
+  enableOrchestration: false
+  uniqueHostId: ""
+  accountAccessKey: "5x353avsni8c"
+  machinePath: ""
+  simEnabled: true
+  applicationName: ""
+  tierName: ""
+  nodeName: ""
+
